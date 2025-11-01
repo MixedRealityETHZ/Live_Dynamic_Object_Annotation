@@ -611,6 +611,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 00388b2bf456999439be049a5fba5e44, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  serverUrl: ws://127.0.0.1:8765
+  webcamManager: {fileID: 0}
+  targetFps: 30
+  jpgQuality: 75
+  previewRenderer: {fileID: 0}
 --- !u!4 &107093224
 Transform:
   m_ObjectHideFlags: 0
@@ -2901,6 +2906,9 @@ MonoBehaviour:
   webCamTextureManager: {fileID: 1900725047}
   cameraQuad: {fileID: 559298752}
   quadDistance: 1
+  serverUrl: ws://192.168.0.116:8765
+  targetFps: 30
+  jpgQuality: 75
 --- !u!1 &560032757
 GameObject:
   m_ObjectHideFlags: 0
