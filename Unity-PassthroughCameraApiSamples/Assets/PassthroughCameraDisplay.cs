@@ -1,4 +1,4 @@
-using System;
+/*using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -33,9 +33,9 @@ public class PassthroughCameraDisplay : MonoBehaviour
         }
 
     }
-}
+}*/
 
-/*
+
 // PassthroughWebSocketStreamer.cs
 // Streams JPEG frames from WebCamTextureManager.WebCamTexture to your Python server
 // Uses System.Net.WebSockets (not supported on WebGL).
@@ -278,7 +278,7 @@ public class PassthroughWebSocketStreamer : MonoBehaviour
                 ws.Dispose();
             }
         }
-        catch {   }
+        catch { }
     }
 
     public void PlaceQuad()
@@ -315,4 +315,3 @@ public class PassthroughWebSocketStreamer : MonoBehaviour
     }
 }
 
-*/
