@@ -39,7 +39,7 @@ public class PassthroughCameraDisplay : MonoBehaviour
 // PassthroughWebSocketStreamer.cs
 // Streams JPEG frames from WebCamTextureManager.WebCamTexture to your Python server
 // Uses System.Net.WebSockets (not supported on WebGL).
-using UnityEngine;
+/*using UnityEngine;
 using System;
 using System.IO;
 using System.Net.WebSockets;
@@ -315,3 +315,4 @@ public class PassthroughWebSocketStreamer : MonoBehaviour
     }
 }
 
+*/
