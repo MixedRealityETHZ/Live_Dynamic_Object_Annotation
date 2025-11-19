@@ -294,9 +294,31 @@ async def handler(ws):
         task.cancel()
         try:
             await task
-        except:
+        except asyncio.CancelledError:
+            pass
+        except Exception:
             pass
 
+        # -----------------------------------------------
+        # 🔑 GPU Memory Cleanup Section - ADDED
+        # -----------------------------------------------
+        print("[SERVER] Starting GPU memory cleanup...")
+        try:
+            # 1. Clear internal state and tracking results
+            st.predictor.reset_state()
+            # 2. Explicitly delete references
+            del st
+            del predictor
+
+            # 3. Force PyTorch to clear its cache and Python GC to run
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            import gc
+            gc.collect()
+            print("[SERVER] GPU memory successfully freed.")
+        except Exception as e:
+            print(f"[SERVER] Error during cleanup: {e}")
+        # -----------------------------------------------
 
 async def main():
     print(f"SAM2 WebSocket server: ws://{HOST}:{PORT}")
