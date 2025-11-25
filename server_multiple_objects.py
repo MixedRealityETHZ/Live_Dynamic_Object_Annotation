@@ -237,6 +237,32 @@ async def process_loop(ws, st: Session):
                 pass
 
 
+def save_as_png_sync(buf, path):
+    arr = np.frombuffer(buf, np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    cv2.imwrite(path, img)
+
+def save_params_to_txt(params_list, folder, filename="params.txt"):
+    """
+    Writes a list of numbers to a text file separated by spaces.
+    Example output: 500.21 500.21 320.0 240.0
+    """
+    file_path = os.path.join(folder, filename)
+
+    # 1. Ensure folder exists
+    os.makedirs(folder, exist_ok=True)
+
+    # 2. Convert numbers to strings and join with space
+    # map(str, params_list) converts every number to a string
+    # " ".join(...) connects them with a single space
+    content = " ".join(map(str, params_list))
+
+    # 3. Write to file
+    with open(file_path, "w") as f:
+        f.write(content)
+
+    print(f"[SERVER] Saved parameters to {file_path}")
+
 async def handler(ws):
     print("Client connected")
 
@@ -254,6 +280,11 @@ async def handler(ws):
     video_base_folder = "videos"
     video_name = str(time.time())
     video_folder = os.path.join(video_base_folder, video_name)
+
+    os.makedirs(video_folder, exist_ok=True)
+
+    camera_intrinsics = [868.7774658203125, 868.7774658203125, 642.9483642578125, 483.1307067871094]
+    save_params_to_txt(camera_intrinsics, video_folder, filename="intrinsics.txt")
 
     ########################
 
@@ -303,12 +334,10 @@ async def handler(ws):
                 #### camera capture ####
                 #save msg converted to png to file_path
 
-
                 file_name = str(frame_counter) + ".png"
                 file_path = os.path.join(video_folder, file_name)
 
-                image = decode_jpeg(msg)
-                cv2.imwrite(file_path, image)
+                asyncio.create_task(asyncio.to_thread(save_as_png_sync, msg, file_path))
 
                 frame_counter += 1
                 ########################
@@ -327,7 +356,7 @@ async def handler(ws):
             pass
 
         # -----------------------------------------------
-        # 🔑 GPU Memory Cleanup Section - ADDED
+        # GPU Memory Cleanup Section - ADDED
         # -----------------------------------------------
         print("[SERVER] Starting GPU memory cleanup...")
         try:
