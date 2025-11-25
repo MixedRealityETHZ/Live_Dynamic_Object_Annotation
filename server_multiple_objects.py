@@ -4,6 +4,7 @@ import cv2, numpy as np, websockets, torch
 from collections import deque
 from dataclasses import dataclass, field
 from sam2.build_sam import build_sam2_camera_predictor
+import os
 
 HOST, PORT = "0.0.0.0", 8765
 DEBOUNCE_SECONDS = 0.35  # idle time after last click before auto-start tracking
@@ -247,6 +248,15 @@ async def handler(ws):
     st = Session(predictor=predictor)
     task = asyncio.create_task(process_loop(ws, st))
 
+    #### camera capture ####
+    frame_counter = 0
+
+    video_base_folder = "videos"
+    video_name = str(time.time())
+    video_folder = os.path.join(video_base_folder, video_name)
+
+    ########################
+
     try:
         async for msg in ws:
             if isinstance(msg, str):
@@ -284,9 +294,26 @@ async def handler(ws):
                         st.tracking_started = True
                         print("[SERVER] manual start -> tracking")
 
+                elif cmd == "intrinsics":
+                    print(data)
             else:
                 # JPEG frame
                 st.q.append(msg)
+
+                #### camera capture ####
+                #save msg converted to png to file_path
+
+
+                file_name = str(frame_counter) + ".png"
+                file_path = os.path.join(video_folder, file_name)
+
+                image = decode_jpeg(msg)
+                cv2.imwrite(file_path, image)
+
+                frame_counter += 1
+                ########################
+
+
 
     except websockets.exceptions.ConnectionClosed:
         print("Client disconnected")
