@@ -565,15 +565,23 @@ public class PassthroughQuadAlignerWithSegmentation : MonoBehaviour
     private Texture2D maskTex;
     private Color[] maskBuffer;
 
+    //private int counterFrame = 0;
+
     // JSON message shape
     [Serializable]
+
+    
     private class ClickMsg
     {
         public string cmd = "prompt";
         public int x;
         public int y;
-        /*        public int frame;
-                public float u;     // 0..1 (x)
+        public float focalx;
+        public float focaly;
+        public float principalx;
+        public float principaly;
+        /*public int frame;
+             /*   public float u;     // 0..1 (x)
                 public float v;     // 0..1 (y; top-left origin)
                 public int texW;
                 public int texH;
@@ -632,6 +640,7 @@ public class PassthroughQuadAlignerWithSegmentation : MonoBehaviour
             reticleLeft = CreateReticleGO("LeftReticle");
             reticleRight = CreateReticleGO("RightReticle");
         }
+
 
         _ = ConnectAndStartAsync();
         StartCoroutine(CaptureAndSendLoop());
@@ -956,11 +965,22 @@ public class PassthroughQuadAlignerWithSegmentation : MonoBehaviour
         {
             type = "prompt";
         }
+
+        //send intrinsics
+        var intrinsics = PassthroughCameraUtils.GetCameraIntrinsics(Eye);
+        Vector2 focalLength = intrinsics.FocalLength;
+        Vector2 principalPoint = intrinsics.PrincipalPoint;
+
         var msg = new ClickMsg
         {
             cmd = type,
             x = px,
             y = py
+            /*cmd = "intrinsics",
+            focalx = focalLength.x,
+            focaly = focalLength.y,
+            principalx = principalPoint.x,
+            principaly = principalPoint.y*/
             /*            frame = frameId,
                         u = uv.x,
                         v = 1f - uv.y, // flip to top-left origin
