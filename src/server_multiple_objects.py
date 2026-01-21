@@ -1,4 +1,3 @@
-# sam2_ws_server_mask_only.py
 import asyncio, json, time, traceback
 import cv2, numpy as np, websockets, torch
 from collections import deque
@@ -7,9 +6,9 @@ from sam2.build_sam import build_sam2_camera_predictor
 import os
 
 HOST, PORT = "0.0.0.0", 8765
-DEBOUNCE_SECONDS = 0.35  # idle time after last click before auto-start tracking
+DEBOUNCE_SECONDS = 0.35
 
-# Optional: prefer math attention (broad compatibility)
+
 try:
     from torch.nn.attention import sdpa_kernel, SDPBackend
     sdpa_kernel(SDPBackend.MATH).__enter__()
@@ -51,7 +50,7 @@ class Session:
     predictor: any
     q: deque = field(default_factory=lambda: deque(maxlen=1))
 
-    # stream/predictor state
+
     inited: bool = False
     frame_wh: tuple | None = None
 
@@ -101,19 +100,19 @@ async def process_loop(ws, st: Session):
                 st.last_video_masks = None
                 st.reanchor_click = None
 
-            # ---------- synchronous RE-ANCHOR if requested ----------
+            # synchronous re-anchor if requested
             if st.reanchor_click is not None:
                 rx, ry = st.reanchor_click
                 st.reanchor_click = None  # consume the request
 
-                # 1) Re-init with *current* frame as conditioning frame 0
+                # Re-init with *current* frame as conditioning frame 0
                 st.predictor.load_first_frame(frame)
                 st.inited = True
                 st.frame_wh = wh
                 st.tracking_started = False
                 st.last_seed_union = None
 
-                # 2) Re-create existing objects via add_new_mask from last logits
+                # Re-create existing objects via add_new_mask from last logits
                 if st.last_obj_ids is not None and st.last_video_masks is not None:
                     try:
                         masks_logits = squeeze_video_masks(st.last_video_masks)  # [B,H,W]
@@ -136,7 +135,7 @@ async def process_loop(ws, st: Session):
                         print("[SERVER] re-anchor: re-add old masks failed:")
                         traceback.print_exc()
 
-                # 3) Add the NEW object as a click
+                # Add the new object as a click
                 px = int(np.clip(rx, 0, w - 1)); py = int(np.clip(ry, 0, h - 1))
                 new_id = st.next_obj_id
                 st.next_obj_id += 1
@@ -164,11 +163,11 @@ async def process_loop(ws, st: Session):
                 await ws.send(png_from_mask(st.last_seed_union if st.last_seed_union is not None
                                             else np.zeros((h, w), np.uint8)))
                 st.tracking_started = True
-                # Skip track() for this frame; continue loop to next frame
+                # Skip track() for this frame, continue loop to next frame
                 st.q.clear()
                 continue
 
-            # ---------- multi-object seeding BEFORE tracking ----------
+            # multi-object seeding before tracking
             while st.pending_clicks and not st.tracking_started:
                 x, y = st.pending_clicks.popleft()
                 x = int(np.clip(x, 0, w - 1))
@@ -211,12 +210,12 @@ async def process_loop(ws, st: Session):
                     await ws.send(png_from_mask(np.zeros((h, w), np.uint8)))
                 continue
 
-            # ---------- Tracking mode ----------
+            # Tracking mode
             try:
                 with torch.no_grad():
                     obj_ids, video_res_masks = st.predictor.track(frame)
                 st.last_obj_ids = list(obj_ids) if isinstance(obj_ids, list) else obj_ids
-                st.last_video_masks = video_res_masks  # keep logits (not binarized)
+                st.last_video_masks = video_res_masks
                 mask = tensor_union_logits_to_u8_mask(
                     squeeze_video_masks(video_res_masks), h, w
                 )
@@ -249,15 +248,12 @@ def save_params_to_txt(params_list, folder, filename="params.txt"):
     """
     file_path = os.path.join(folder, filename)
 
-    # 1. Ensure folder exists
+
     os.makedirs(folder, exist_ok=True)
 
-    # 2. Convert numbers to strings and join with space
-    # map(str, params_list) converts every number to a string
-    # " ".join(...) connects them with a single space
     content = " ".join(map(str, params_list))
 
-    # 3. Write to file
+
     with open(file_path, "w") as f:
         f.write(content)
 
@@ -274,7 +270,7 @@ async def handler(ws):
     st = Session(predictor=predictor)
     task = asyncio.create_task(process_loop(ws, st))
 
-    #### camera capture ####
+    # camera capture
     frame_counter = 0
 
     video_base_folder = "videos"
@@ -286,7 +282,7 @@ async def handler(ws):
     camera_intrinsics = [868.7774658203125, 868.7774658203125, 642.9483642578125, 483.1307067871094]
     save_params_to_txt(camera_intrinsics, video_folder, filename="intrinsics.txt")
 
-    ########################
+
 
     try:
         async for msg in ws:
@@ -328,19 +324,16 @@ async def handler(ws):
                 elif cmd == "intrinsics":
                     print(data)
             else:
-                # JPEG frame
                 st.q.append(msg)
 
-                #### camera capture ####
-                #save msg converted to png to file_path
-
+                # camera capture
+                # currently saving msg converted to png to file_path
                 file_name = str(frame_counter) + ".png"
                 file_path = os.path.join(video_folder, file_name)
 
                 asyncio.create_task(asyncio.to_thread(save_as_png_sync, msg, file_path))
 
                 frame_counter += 1
-                ########################
 
 
 
@@ -355,18 +348,15 @@ async def handler(ws):
         except Exception:
             pass
 
-        # -----------------------------------------------
-        # GPU Memory Cleanup Section - ADDED
-        # -----------------------------------------------
+
+        # GPU Memory Cleanup Section
         print("[SERVER] Starting GPU memory cleanup...")
         try:
-            # 1. Clear internal state and tracking results
+
             st.predictor.reset_state()
-            # 2. Explicitly delete references
             del st
             del predictor
 
-            # 3. Force PyTorch to clear its cache and Python GC to run
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             import gc
@@ -374,7 +364,6 @@ async def handler(ws):
             print("[SERVER] GPU memory successfully freed.")
         except Exception as e:
             print(f"[SERVER] Error during cleanup: {e}")
-        # -----------------------------------------------
 
 async def main():
     print(f"SAM2 WebSocket server: ws://{HOST}:{PORT}")
