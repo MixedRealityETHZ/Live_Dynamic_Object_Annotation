@@ -1,11 +1,11 @@
-# Dynamic Object Masking for Robust SLAM in Mixed Reality
+# Live Dynamic Object Masking on Meta Quest 3 for Robust 3D Reconstruction using SLAM
 
 <p align="center">
   <img src="imgs/live_segmentation.png" width="600">
 </p>
 
 
-Modern SLAM systems typically assume static environments, which leads to degraded performance in scenes containing moving objects. In this project, we explore how externally computed **binary dynamic object masks** can be incorporated into a SLAM pipeline to mitigate this issue.
+SLAM systems typically assume static environments, which leads to degraded performance in scenes containing moving objects. In this project, we explore how externally computed **binary dynamic object masks** can be incorporated into a SLAM pipeline to mitigate this issue.
 
 Our contributions include:
 - A client–server Meta Quest system for interactive object selection and segmentation using SAM2
@@ -13,7 +13,7 @@ Our contributions include:
 - Evaluation of masked vs. unmasked SLAM
 
 
-This repository does not include full third-party codebases for SAM2 and DROID-SLAM. Instead, it contains only the files that were modified or added as part of this project. The modified files for mask integration in DROID-SLAM can be found in /src/external/DROID-SLAM
+This repository does not include full third-party codebases for SAM2 and DROID-SLAM. Instead, it contains only the files that were modified or added as part of this project. The modified files for mask integration in DROID-SLAM can be found in ``/src/external/DROID-SLAM`` including evaluation scripts and scripts for reconstruction. The app for the Unity client can be found in ``/Unity-PassthroughCameraApiSamples/Assets/DynamicObjectMasking_Client``.
 
 ---
 
@@ -22,11 +22,11 @@ This repository does not include full third-party codebases for SAM2 and DROID-S
 This project builds upon the following repositories:
 
 * **DROID-SLAM**
-  MIT License
+BSD-3-Clause license
   [https://github.com/princeton-vl/DROID-SLAM](https://github.com/princeton-vl/DROID-SLAM)
 
 * **SAM2**
-  Apache 2.0 License
+  Apache 2.0 License,  BSD-3-Clause license
   [https://github.com/facebookresearch/sam2](https://github.com/facebookresearch/sam2)
 
 * **Meta Passthrough Camera API Samples**
